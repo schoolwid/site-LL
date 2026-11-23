@@ -1,0 +1,209 @@
+:root {
+  --fond: #07070d;
+  --carte: #12111f;
+  --bord: #3a2466;
+  --violet: #b44bff;
+  --violet2: #9d1cff;
+  --jaune: #ffd23f;
+  --texte: #f3eefc;
+  --doux: #a79ec2;
+  --vert: #3ddc84;
+  --rouge: #ff5470;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% -10%, #2a1050 0%, var(--fond) 55%) fixed;
+  color: var(--texte);
+  font-family: "Work Sans", system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+h2 { margin: 0 0 1rem; font-size: 1.5rem; }
+h3 { margin: 1.25rem 0 0.5rem; font-size: 1.1rem; }
+a { color: var(--violet); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+.doux { color: var(--doux); font-size: 0.9rem; }
+.droite { margin-left: auto; }
+
+/* ----- Logo néon ----- */
+.logo {
+  font-family: "Mr Dafoe", cursive;
+  font-size: 2.3rem;
+  line-height: 1;
+  color: #f4e8ff;
+  text-decoration: none;
+  text-shadow: 0 0 5px #fff, 0 0 16px var(--violet), 0 0 36px var(--violet2);
+}
+.logo.grand { display: block; font-size: clamp(3.5rem, 14vw, 6rem); margin: 0.5rem 0; }
+
+/* ----- En-tête et recherche ----- */
+.haut, .menu, #contenu { max-width: 980px; margin: 0 auto; padding-left: 1.25rem; padding-right: 1.25rem; }
+.haut { display: flex; align-items: center; gap: 1rem; padding-top: 1rem; padding-bottom: 0.5rem; }
+
+.recherche { flex: 1; display: flex; min-width: 0; }
+.recherche input {
+  flex: 1; min-width: 0;
+  border-radius: 999px 0 0 999px;
+  border-right: none;
+}
+.recherche button {
+  display: grid; place-items: center; width: 52px;
+  background: var(--violet2); color: #fff;
+  border: 2px solid var(--bord); border-radius: 0 999px 999px 0;
+  cursor: pointer;
+}
+.recherche button svg { width: 22px; height: 22px; }
+
+.lien { background: none; border: none; color: var(--doux); font: inherit; cursor: pointer; text-decoration: underline; }
+
+/* ----- Menu (Accueil / Amis / Plug / Mon compte) ----- */
+.menu { display: flex; justify-content: center; align-items: flex-end; gap: 0.5rem; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.menu a {
+  display: grid; justify-items: center; gap: 0.2rem;
+  padding: 0.6rem 1.1rem;
+  border: 2px solid transparent; border-radius: 14px;
+  color: var(--doux); font-weight: 700; font-size: 0.9rem; text-decoration: none;
+}
+.menu a svg { width: 26px; height: 26px; }
+.menu a:hover { color: var(--texte); }
+.menu a.actif { color: var(--texte); background: var(--carte); border-color: var(--bord); }
+.menu a.plug {
+  color: #fff; padding: 0.8rem 1.4rem;
+  background: linear-gradient(160deg, var(--violet), var(--violet2));
+  border-color: #e5c2ff;
+  box-shadow: 0 0 22px rgba(180, 75, 255, 0.65);
+}
+.menu a.plug svg { width: 34px; height: 34px; }
+.menu a.plug.actif { box-shadow: 0 0 30px rgba(180, 75, 255, 0.95); }
+
+#contenu { padding-top: 1rem; padding-bottom: 3rem; }
+
+/* ----- Cartes et listes ----- */
+.carte {
+  background: var(--carte);
+  border: 2px solid var(--bord);
+  border-radius: 14px;
+  padding: 1.1rem;
+}
+.carte:hover { box-shadow: 0 0 18px rgba(180, 75, 255, 0.25); }
+.carte h3 { margin: 0.75rem 0 0.5rem; }
+
+.grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; align-content: start; }
+.ligne { display: flex; align-items: center; gap: 0.75rem; }
+.ligne + .ligne, .lecteur { margin-top: 0.75rem; }
+.lecteur audio { width: 100%; }
+
+.tag {
+  display: inline-block; padding: 0.1rem 0.7rem;
+  border: 2px solid var(--violet); border-radius: 999px;
+  color: var(--violet); font-size: 0.85rem; font-weight: 700;
+}
+
+.avatar {
+  flex-shrink: 0; width: 42px; height: 42px;
+  display: grid; place-items: center;
+  border-radius: 50%; color: #0d1033; font-weight: 800;
+}
+.avatar.grand { width: 72px; height: 72px; font-size: 1.8rem; }
+
+/* ----- Formulaires et boutons ----- */
+.colonne { display: grid; gap: 1rem; }
+label { display: grid; gap: 0.3rem; font-weight: 700; font-size: 0.95rem; }
+
+input, select, textarea {
+  font: inherit; font-weight: 400; width: 100%;
+  padding: 0.65rem 0.9rem;
+  background: #0b0a14; color: var(--texte);
+  border: 2px solid var(--bord); border-radius: 10px;
+}
+input[type="file"] { padding: 0.5rem; }
+input::placeholder { color: var(--doux); }
+:focus-visible { outline: 3px solid var(--violet); outline-offset: 2px; }
+
+.btn {
+  font: inherit; font-weight: 700; color: #fff;
+  background: linear-gradient(160deg, var(--violet), var(--violet2));
+  border: 2px solid #e5c2ff; border-radius: 10px;
+  padding: 0.65rem 1.3rem; cursor: pointer;
+  box-shadow: 0 0 16px rgba(180, 75, 255, 0.5);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 0 24px rgba(180, 75, 255, 0.8); }
+.sec {
+  font: inherit; font-weight: 700; color: var(--texte);
+  background: transparent; border: 2px solid var(--bord); border-radius: 10px;
+  padding: 0.65rem 1.3rem; cursor: pointer;
+}
+.sec:hover { border-color: var(--violet); }
+.sec.actif { background: var(--violet2); border-color: #e5c2ff; }
+.petit { padding: 0.3rem 0.8rem; font-size: 0.9rem; }
+
+.erreur { margin: 0; color: var(--rouge); font-weight: 700; min-height: 1.2em; }
+.ok { margin: 0; color: var(--vert); font-weight: 700; min-height: 1.2em; }
+.note { color: var(--doux); font-size: 0.85rem; }
+
+/* ----- Page de connexion ----- */
+.centre { min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
+.panneau {
+  width: min(100%, 440px); text-align: center;
+  background: rgba(18, 17, 31, 0.9);
+  border: 2px solid var(--violet); border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 0 40px rgba(157, 28, 255, 0.45);
+}
+.panneau form { text-align: left; }
+.retour { display: block; text-align: left; color: var(--doux); font-size: 0.9rem; text-decoration: none; }
+.onglets { display: grid; grid-template-columns: 1fr 1fr; margin: 1rem 0; border: 2px solid var(--bord); border-radius: 12px; overflow: hidden; }
+.onglets button { font: inherit; font-weight: 700; padding: 0.7rem; background: transparent; color: var(--doux); border: none; cursor: pointer; }
+.onglets button.actif { background: var(--violet2); color: #fff; }
+
+/* ----- Amis et messages ----- */
+.amis { display: grid; grid-template-columns: 260px 1fr; gap: 1rem; align-items: start; }
+.ami {
+  width: 100%; display: flex; align-items: center; gap: 0.75rem;
+  font: inherit; color: var(--texte); text-align: left;
+  background: var(--carte); border: 2px solid var(--bord); border-radius: 12px;
+  padding: 0.6rem; cursor: pointer;
+}
+.ami.actif { border-color: var(--violet); box-shadow: 0 0 14px rgba(180, 75, 255, 0.5); }
+.point { margin-left: auto; width: 10px; height: 10px; border-radius: 50%; background: #4a4660; }
+.point.on { background: var(--vert); box-shadow: 0 0 8px var(--vert); }
+
+.fil { display: grid; gap: 0.4rem; height: 280px; overflow-y: auto; padding: 0.75rem 0; align-content: start; }
+.msg { margin: 0; max-width: 75%; padding: 0.5rem 0.8rem; border-radius: 14px 14px 14px 4px; background: #241c3d; justify-self: start; }
+.msg.moi { background: var(--violet2); border-radius: 14px 14px 4px 14px; justify-self: end; }
+#envoi input { flex: 1; }
+
+/* ----- Mon compte ----- */
+.teintes { border: none; padding: 0; margin: 0; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.teintes legend { padding: 0; margin-bottom: 0.4rem; font-weight: 700; font-size: 0.95rem; }
+.pastille { position: relative; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; }
+.pastille input { position: absolute; opacity: 0; inset: 0; }
+.pastille:has(input:checked) { outline: 3px solid #fff; outline-offset: 2px; }
+.pastille:has(input:focus-visible) { outline: 3px solid var(--violet); outline-offset: 2px; }
+
+#envoi, #f.carte { max-width: 560px; }
+form#f.carte { width: 100%; }
+
+/* ----- Petits écrans ----- */
+@media (max-width: 700px) {
+  .haut { flex-wrap: wrap; }
+  .recherche { order: 3; flex-basis: 100%; }
+  .amis { grid-template-columns: 1fr; }
+  .menu a { padding: 0.5rem 0.7rem; font-size: 0.8rem; }
+  .menu a.plug { padding: 0.7rem 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+}

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ThePlug — Accueil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Mr+Dafoe&family=Work+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="accueil.css">
+</head>
+
+<body>
+  <canvas id="scene" aria-label="Un artiste capuché devant son ordinateur dans une chambre sombre"></canvas>
+
+  <div class="hud">
+    <h1 class="sr-only">ThePlug</h1>
+    <p id="hint">Clique sur l’ordinateur pour te connecter</p>
+    <button id="ouvrir" class="btn">Se connecter</button>
+  </div>
+
+  <!-- Three.js (bibliothèque 3D) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // ----- Clic sur l'écran : fondu vers le noir puis page de connexion -----
+    function ouvrir() {
+      document.body.classList.add("sortie");
+      setTimeout(() => { location.href = "connexion.html"; }, reduit ? 0 : 450);
+    }
+    // Ces deux fonctions sont remplacées par la version 3D si la 3D se charge
+    let aller = ouvrir;
+    let retourner = () => {};
+
+    $("ouvrir").addEventListener("click", () => aller());
+    // Si on revient en arrière avec le navigateur, on repart de la scène de départ
+    addEventListener("pageshow", (e) => { if (e.persisted) location.reload(); });
+
+    // ----- La scène 3D -----
+    if (window.THREE) init3D();
+    else $("hint").textContent = "La 3D ne s’est pas chargée (internet requis). Utilise le bouton ci-dessous.";
+
+    function init3D() {
+      const renderer = new THREE.WebGLRenderer({ canvas: $("scene"), antialias: true });
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x07070d);
+      scene.fog = new THREE.Fog(0x07070d, 7, 16);
+      const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 50);
+
+      // Petits outils pour fabriquer des formes
+      const mat = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.85 }, o));
+      const box = (w, h, d, c, x, y, z) => {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c));
+        m.position.set(x, y, z); scene.add(m); return m;
+      };
+      const ball = (r, c, x, y, z, parent) => {
+        const m = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 16), mat(c));
+        m.position.set(x, y, z); (parent || scene).add(m); return m;
+      };
+      const neon = (w, h, d, c, x, y, z) => {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ color: c }));
+        m.position.set(x, y, z); scene.add(m);
+      };
+      // Un cylindre entre deux points (bras, jambes)
+      const membre = (a, b, r, c) => {
+        const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), d = B.clone().sub(A);
+        const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, d.length(), 10), mat(c));
+        m.position.copy(A).add(B).multiplyScalar(0.5);
+        m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize());
+        scene.add(m);
+      };
+
+      // La chambre
+      box(12, 0.1, 12, 0x151522, 0, -0.05, 2);       // sol
+      box(12, 5, 0.1, 0x1a1a2c, 0, 2.5, -1.2);       // mur du fond
+      box(0.1, 5, 12, 0x171727, -3.2, 2.5, 2);       // mur de gauche
+      neon(5, 0.04, 0.04, 0x4d6bff, 0, 3.1, -1.12);  // néon bleu
+      neon(0.04, 0.04, 4, 0xff4f9a, -3.12, 2.8, 1);  // néon rose
+
+      // Le grand néon violet « ThePlug » sur le mur du fond
+      const nv = document.createElement("canvas");
+      nv.width = 1024; nv.height = 360;
+      const ngn = nv.getContext("2d");
+      const nTexte = new THREE.CanvasTexture(nv);
+      function dessinerNeon() {
+        ngn.clearRect(0, 0, 1024, 360);
+        let taille = 230;
+        do { ngn.font = taille + 'px "Mr Dafoe", cursive'; taille -= 10; }
+        while (ngn.measureText("ThePlug").width > 880 && taille > 60);
+        ngn.textAlign = "center";
+        ngn.textBaseline = "middle";
+        // 3 couches : grand halo violet, tube violet clair, coeur presque blanc
+        [[70, "#9d1cff", "#9d1cff"], [30, "#b44bff", "#c77dff"], [10, "#ffffff", "#f4e8ff"]].forEach(([flou, halo, couleur]) => {
+          ngn.shadowBlur = flou;
+          ngn.shadowColor = halo;
+          ngn.fillStyle = couleur;
+          ngn.fillText("ThePlug", 512, 190);
+        });
+        nTexte.needsUpdate = true;
+      }
+      dessinerNeon();
+      // On redessine quand la police calligraphique est chargée
+      if (document.fonts && document.fonts.load) {
+        document.fonts.load('200px "Mr Dafoe"').then(dessinerNeon).catch(() => {});
+      }
+      const enseigne = new THREE.Mesh(
+        new THREE.PlaneGeometry(3.2, 1.12),
+        new THREE.MeshBasicMaterial({ map: nTexte, transparent: true, depthWrite: false })
+      );
+      enseigne.position.set(0, 2.4, -1.13);
+      scene.add(enseigne);
+
+      // Le bureau
+      box(2.8, 0.08, 1.1, 0x2b2233, 0, 0.78, -0.62);
+      [-1.3, 1.3].forEach(x => [-1.1, -0.15].forEach(z => box(0.08, 0.74, 0.08, 0x1a1520, x, 0.37, z)));
+      box(0.8, 0.03, 0.26, 0x0c0c14, 0, 0.83, -0.3); // clavier
+
+      // L'écran (dessiné sur un canvas, animé à chaque image)
+      box(1.4, 0.85, 0.06, 0x0b0b12, 0, 1.38, -0.9);
+      box(0.1, 0.35, 0.08, 0x0b0b12, 0, 0.98, -0.9);
+      box(0.5, 0.03, 0.25, 0x0b0b12, 0, 0.83, -0.85);
+      const cv = document.createElement("canvas");
+      cv.width = 512; cv.height = 300;
+      const g = cv.getContext("2d");
+      const tex = new THREE.CanvasTexture(cv);
+      const ecran = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.76), new THREE.MeshBasicMaterial({ map: tex }));
+      ecran.position.set(0, 1.38, -0.865);
+      scene.add(ecran);
+
+      function dessinerEcran(t, survol) {
+        g.fillStyle = survol ? "#1b2370" : "#10143f";
+        g.fillRect(0, 0, 512, 300);
+        g.fillStyle = "#ffd23f";
+        g.font = "bold 34px sans-serif";
+        g.fillText("ThePlug", 28, 56);
+        for (let i = 0; i < 28; i++) {
+          const h = 20 + Math.abs(Math.sin(t * 3 + i * 0.6)) * 90;
+          g.fillStyle = i % 2 ? "#ff4f9a" : "#6f7bff";
+          g.fillRect(28 + i * 16, 210 - h, 10, h);
+        }
+        g.fillStyle = "#fff";
+        g.font = "20px sans-serif";
+        g.fillText(survol ? "Clique pour te connecter" : "Connecte-toi pour poster tes sons", 28, 262);
+        tex.needsUpdate = true;
+      }
+
+      // Les lumières
+      scene.add(new THREE.AmbientLight(0x303060, 0.7));
+      const lumiereEcran = new THREE.PointLight(0x6f7bff, 1.4, 6);
+      lumiereEcran.position.set(0, 1.4, -0.2);
+      scene.add(lumiereEcran);
+      const lumiereRose = new THREE.PointLight(0xff4f9a, 0.9, 7);
+      lumiereRose.position.set(-2.6, 2.6, 0.5);
+      scene.add(lumiereRose);
+      const lumiereNeon = new THREE.PointLight(0xb44bff, 1.3, 7);
+      lumiereNeon.position.set(0, 2.4, -0.5);
+      scene.add(lumiereNeon);
+
+      // Le personnage
+      const sweat = 0x2d2850, peau = 0x9c7a64;
+      box(0.7, 0.08, 0.7, 0x0f0f18, 0, 0.5, 0.62);   // assise
+      box(0.7, 0.85, 0.08, 0x0f0f18, 0, 0.95, 1.0);  // dossier
+      box(0.06, 0.45, 0.06, 0x0a0a10, 0, 0.25, 0.62);
+      const torse = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, 0.72, 14), mat(sweat));
+      torse.position.set(0, 0.98, 0.62);
+      scene.add(torse);
+      [-1, 1].forEach(s => {
+        ball(0.2, sweat, s * 0.3, 1.27, 0.62);                                // épaules
+        membre([s * 0.34, 1.2, 0.62], [s * 0.2, 0.9, -0.3], 0.07, sweat);     // bras
+        ball(0.07, peau, s * 0.2, 0.88, -0.3);                                 // mains
+        membre([s * 0.17, 0.58, 0.62], [s * 0.17, 0.58, -0.1], 0.1, 0x1c1c2e); // cuisses
+        membre([s * 0.17, 0.58, -0.1], [s * 0.17, 0.06, -0.15], 0.09, 0x1c1c2e); // mollets
+        box(0.16, 0.08, 0.28, 0xf2f2f2, s * 0.17, 0.05, -0.2);                 // baskets
+      });
+
+      // La tête : capuche + casque
+      const tete = new THREE.Group();
+      tete.position.set(0, 1.55, 0.62);
+      scene.add(tete);
+      ball(0.27, sweat, 0, 0, 0.02, tete);        // capuche
+      ball(0.2, 0x242040, 0, -0.1, 0.18, tete);   // pli de la capuche
+      const arceau = new THREE.Mesh(new THREE.TorusGeometry(0.31, 0.03, 8, 28, Math.PI), mat(0x15151f));
+      tete.add(arceau);
+      [-1, 1].forEach(s => {
+        const oreillette = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.11, 0.11, 0.08, 16),
+          mat(0xff4f9a, { emissive: 0xff2f7a, emissiveIntensity: 0.6 })
+        );
+        oreillette.rotation.z = Math.PI / 2;
+        oreillette.position.set(s * 0.31, -0.02, 0);
+        tete.add(oreillette);
+      });
+
+      // Les notes de musique qui montent
+      const nc = document.createElement("canvas");
+      nc.width = nc.height = 64;
+      const ng = nc.getContext("2d");
+      ng.fillStyle = "#ffd23f"; ng.font = "bold 52px sans-serif"; ng.textAlign = "center";
+      ng.fillText("♪", 32, 50);
+      const nTex = new THREE.CanvasTexture(nc);
+      const notes = [...Array(6)].map(() => {
+        const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: nTex, transparent: true, depthWrite: false }));
+        s.scale.set(0.22, 0.22, 0.22);
+        s.visible = !reduit;
+        scene.add(s);
+        return s;
+      });
+
+      // Caméra, souris et clic sur l'écran
+      const rayon = new THREE.Raycaster();
+      const sou = new THREE.Vector2(-5, -5);
+      let survol = false, mx = 0, my = 0;
+      let mode = "idle", p = 0, k = 0; // idle = repos, in = zoom avant, zoom = connexion ouverte, out = retour
+      const base = new THREE.Vector3(2.4, 1.9, 4.2), cible = new THREE.Vector3(0, 1.5, 0.2);
+      const zoomPos = new THREE.Vector3(0.75, 1.4, 0.25), zoomCible = new THREE.Vector3(0, 1.36, -0.85);
+      const cam = new THREE.Vector3(), regard = new THREE.Vector3();
+
+      addEventListener("pointermove", (e) => {
+        mx = e.clientX / innerWidth * 2 - 1;
+        my = e.clientY / innerHeight * 2 - 1;
+        sou.set(mx, -my);
+      });
+      $("scene").addEventListener("click", (e) => {
+        if (mode !== "idle") return;
+        sou.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight * 2 - 1));
+        rayon.setFromCamera(sou, camera);
+        if (rayon.intersectObject(ecran).length) aller();
+      });
+
+      aller = () => { if (mode === "idle") { mode = "in"; p = 0; $("hint").classList.add("cache"); } };
+      retourner = () => { mode = "out"; p = 0; $("hint").classList.remove("cache"); };
+
+      function taille() {
+        renderer.setSize(innerWidth, innerHeight, false);
+        camera.aspect = innerWidth / innerHeight;
+        camera.fov = camera.aspect < 1 ? 65 : 45;
+        camera.updateProjectionMatrix();
+      }
+      addEventListener("resize", taille);
+      taille();
+
+      // La boucle d'animation
+      const horloge = new THREE.Clock();
+      function boucle() {
+        requestAnimationFrame(boucle);
+        const dt = Math.min(horloge.getDelta(), 0.05), t = horloge.elapsedTime;
+
+        rayon.setFromCamera(sou, camera);
+        survol = mode === "idle" && rayon.intersectObject(ecran).length > 0;
+        $("scene").style.cursor = survol ? "pointer" : "default";
+
+        if (mode === "in" || mode === "out") {
+          p = Math.min(1, p + dt / (reduit ? 0.01 : 1.1));
+          const e = p * p * (3 - 2 * p);
+          k = mode === "in" ? e : 1 - e;
+          if (p === 1) {
+            if (mode === "in") { mode = "zoom"; ouvrir(); } else mode = "idle";
+          }
+        }
+        cam.set(base.x + mx * 0.5 * (1 - k), base.y - my * 0.25 * (1 - k), base.z).lerp(zoomPos, k);
+        regard.copy(cible).lerp(zoomCible, k);
+        camera.position.copy(cam);
+        camera.lookAt(regard);
+
+        // Il hoche la tête au rythme (90 battements par minute)
+        const a = reduit ? 0 : 1, beat = Math.sin(t * Math.PI * 2 * 1.5);
+        tete.rotation.z = 0.07 * beat * a;
+        tete.rotation.x = 0.05 * Math.sin(t * Math.PI * 1.5) * a;
+        tete.position.y = 1.55 + 0.02 * Math.abs(beat) * a;
+
+        notes.forEach((s, i) => {
+          const ph = (t * 0.35 + i / 6) % 1;
+          s.position.set(((i % 3) - 1) * 0.28 + Math.sin(t + i) * 0.06, 1.9 + ph * 1.1, 0.7);
+          s.material.opacity = Math.sin(ph * Math.PI);
+        });
+
+        lumiereEcran.intensity = 1.3 + Math.sin(t * 20) * 0.05 + Math.sin(t * 3) * 0.1;
+        // Petit scintillement du néon (rare et discret)
+        const scint = !reduit && Math.sin(t * 47) > 0.985 ? 0.6 : 1;
+        enseigne.material.opacity = scint;
+        lumiereNeon.intensity = 1.3 * scint;
+        dessinerEcran(t, survol);
+        renderer.render(scene, camera);
+      }
+      boucle();
+    }
+  </script>
+</body>
+</html>
